@@ -1,0 +1,69 @@
+# ========================
+# Python / Backend
+# ========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env
+
+# Backend env
+backend/.env
+
+# Model weights
+backend/*.pt
+backend/checkpoints/
+
+# Test images / temp files
+backend/*.jpg
+backend/*.jpeg
+backend/*.png
+backend/*.mp4
+
+# ========================
+# Node / Frontend
+# ========================
+node_modules/
+frontend/node_modules/
+.next/
+frontend/.next/
+out/
+frontend/out/
+
+# Frontend env
+frontend/.env.local
+frontend/.env*.local
+
+# Build artifacts
+.vercel
+.netlify
+
+# ========================
+# General
+# ========================
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
+*.swo
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# ngrok config (contains sensitive info)
+ngrok.yml
