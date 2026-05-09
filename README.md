@@ -1,140 +1,66 @@
-# MyStorey v4
+# MyStorey
 
-> AI-powered door-to-door storage with physical inventory orchestration, scoped to Singapore.
+**Door-to-door storage, powered by AI — built for Singapore.**
 
-## Features
-
-- **AI Vision Pipeline** — YOLOv8n live preview → YOLOv8m detection → DepthPro fp16 metric depth → SAM 2 Tiny segmentation (sequential GPU loading, peak ~2.1 GB VRAM)
-- **Voice Interface** — ElevenLabs STT/TTS with animated Nana Banana Pro mascot
-- **Smart Inventory** — Neo4j + Supabase dual-store with TrustCard owner ratings
-- **Booking & Payments** — Stripe Checkout with webhook confirmation emails (SMTP)
-- **Live Map** — Mapbox GL JS host browsing with Dijkstra shortest-path web worker
-- **Climate Alerts** — NEA real-time temperature API with in-app badge
-- **AI Chat** — OpenAI GPT-4o-mini + OpenRouter for conversational inventory help
-- **Mobile-ready** — ngrok tunnel for on-device camera access over HTTPS
+MyStorey connects people who need storage with hosts who have space. Users point their phone at their belongings; the AI measures volume, prices the job, and handles the full booking flow end-to-end.
 
 ---
 
-## Quick Start
+## The Problem
 
-### 1. Backend
+Self-storage in Singapore is expensive, inflexible, and physically distant. Most people just need somewhere nearby to keep a few boxes for a few months — but existing services require long-term contracts and a car trip to a warehouse.
 
-```bash
-cd backend
-pip install -r requirements.txt
-cp .env.example .env        # fill in your keys
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-### 2. Frontend
-
-```bash
-cd frontend
-npm install
-cp .env.local.example .env.local   # fill in your keys
-npm run dev                         # → http://localhost:3000
-```
-
-### 3. Generate mascot placeholder images (one-time)
-
-```bash
-cd frontend
-pip install Pillow
-python scripts/generate_mascot_placeholders.py
-```
-
-Replace the generated placeholders with real **Nana Banana Pro** PNGs before demo day (see specs §5).
+MyStorey turns spare rooms, garage corners, and HDB storerooms into micro-storage units, bookable in minutes from a phone.
 
 ---
 
-## Environment Variables
+## How It Works
 
-### Backend (`backend/.env`)
+1. **Scan** — user opens the app on their phone and records a short video of their items
+2. **Measure** — the AI vision pipeline estimates volume automatically (no tape measure needed)
+3. **Match** — the app finds nearby hosts on a live map and suggests the fastest route
+4. **Book & Pay** — Stripe handles payment; both parties receive a confirmation email
+5. **Track** — inventory is stored in a knowledge graph; users can query it by voice at any time
 
-| Key | Description |
+---
+
+## Key Technical Features
+
+### AI Vision Pipeline
+The most novel part of the system. Running on a consumer RTX 3050 (6 GB VRAM), models are loaded sequentially to stay within memory limits:
+
+| Stage | Model | Role |
+|---|---|---|
+| Live preview | YOLOv8n | Real-time object detection overlay |
+| Detection | YOLOv8m | High-accuracy final detection |
+| Depth | DepthPro fp16 | Metric depth estimation (~2 GB VRAM) |
+| Segmentation | SAM 2 Tiny (video mode) | Per-object masks for volume calculation |
+
+Pipeline latency: **~1.1 seconds** for 8 frames. Peak VRAM: **~2.1 GB**.
+
+### Voice Interface
+ElevenLabs STT captures natural speech; GPT-4o-mini interprets intent; ElevenLabs TTS replies aloud. The animated **Nana Banana Pro** mascot reacts to conversation state with a CSS state machine (idle → listening → thinking → speaking).
+
+### Smart Inventory Graph
+All stored items live in a **Neo4j knowledge graph** with Supabase as fallback. Users can ask "where did I put my camping gear?" and get a spoken answer. Each host has a **TrustCard** with verified signals (response rate, reviews, item condition history).
+
+### Routing
+A **Dijkstra web worker** runs shortest-path on the Mapbox GL JS layer so route calculations never block the UI thread.
+
+### Climate Alerts
+Live temperature data from the **NEA API** surfaces a warning badge when storage conditions exceed safe thresholds for sensitive items.
+
+---
+
+## Tech Stack
+
+| Layer | Technologies |
 |---|---|
-| `ELEVENLABS_API_KEY` | ElevenLabs STT + TTS |
-| `STRIPE_SECRET_KEY` | Stripe test-mode secret |
-| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
-| `SMTP_USER` / `SMTP_PASSWORD` | Gmail App Password for email |
-| `NEO4J_URI` / `NEO4J_USER` / `NEO4J_PASSWORD` | Neo4j AuraDB |
-| `SUPABASE_URL` / `SUPABASE_KEY` | Supabase (fallback) |
-| `OPENAI_API_KEY` | GPT-4o-mini for chat |
-| `OPENROUTER_API_KEY` | OpenRouter (image generation / fallback models) |
-| `JWT_SECRET` | JWT signing secret |
-| `SMTP_HOST` / `SMTP_PORT` | SMTP server (default: smtp.gmail.com / 587) |
-| `SMTP_FROM_NAME` | Display name for outbound emails |
-
-### Frontend (`frontend/.env.local`)
-
-| Key | Description |
-|---|---|
-| `NEXT_PUBLIC_API_URL` | Backend URL (default: http://localhost:8000) |
-| `NEXT_PUBLIC_WS_URL` | WebSocket URL |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe test publishable key |
-| `NEXT_PUBLIC_MAPBOX_TOKEN` | Mapbox GL JS token |
-
----
-
-## GPU Setup (RTX 3050, 6 GB VRAM)
-
-Models are loaded sequentially — only one heavy model on GPU at a time. Peak VRAM ≈ 2.1 GB.
-
-```bash
-pip install torch==2.3.0+cu118 torchvision==0.18.0+cu118 --index-url https://download.pytorch.org/whl/cu118
-pip install ultralytics==8.2.18
-pip install git+https://github.com/apple/ml-depth-pro.git   # DepthPro (fp16)
-pip install git+https://github.com/facebookresearch/sam2.git # SAM 2 Tiny
-```
-
----
-
-## Demo Day Checklist
-
-```
-□ Set laptop static IP (192.168.1.200)
-□ Start FastAPI:  uvicorn main:app --host 0.0.0.0 --port 8000
-□ Start Next.js:  npm run dev (in frontend/)
-□ Start ngrok:    ngrok http 3000
-□ Copy ngrok URL → open on phone
-□ Confirm camera works (requires HTTPS = ngrok)
-□ Test voice: tap mic → speak → confirm TTS reply + mascot animates
-□ Test booking: browse hosts → pay with 4242 4242 4242 4242
-□ Trigger climate alert: tap temperature badge in header
-□ Confirm email arrives (requires SMTP config)
-```
-
----
-
-## Architecture
-
-```
-Laptop (RTX 3050)
-├── FastAPI backend        0.0.0.0:8000
-│   ├── YOLO v8m/n         CUDA (sequential GPU loading)
-│   ├── DepthPro fp16      CUDA (~2 GB)
-│   ├── SAM 2 Tiny (video) CUDA (~1.3 GB)
-│   ├── Neo4j driver       → AuraDB cloud
-│   ├── Supabase client    → Supabase cloud (fallback)
-│   └── SMTP               → Gmail
-│
-├── Next.js frontend       0.0.0.0:3000
-│   ├── Mascot component   → public/mascot/*.png
-│   ├── Stripe Elements    → Stripe test mode
-│   └── ngrok tunnel       → https://abc123.ngrok-free.app
-│
-└── External APIs
-    ├── ElevenLabs STT/TTS
-    ├── OpenAI GPT-4o-mini
-    ├── NEA temperature API
-    ├── Stripe API
-    └── Mapbox GL JS
-```
-
-## Test Cards (Stripe)
-
-| Card | Behaviour |
-|---|---|
-| `4242 4242 4242 4242` | Success |
-| `4000 0000 0000 3220` | 3DS auth required |
-| `4000 0000 0000 9995` | Declined |
+| Frontend | Next.js 14 (App Router), TailwindCSS, Mapbox GL JS, Stripe.js |
+| Backend | FastAPI (Python), WebSocket, JWT auth |
+| AI / Vision | YOLOv8, DepthPro fp16, SAM 2 Tiny, OpenAI GPT-4o-mini, OpenRouter |
+| Voice | ElevenLabs STT + TTS |
+| Data | Neo4j AuraDB, Supabase |
+| Payments | Stripe (test mode — full card flow with webhooks) |
+| Notifications | SMTP (Gmail) — fires server-side, independent of browser |
+| Infrastructure | ngrok HTTPS tunnel (required for mobile camera/mic access) |
