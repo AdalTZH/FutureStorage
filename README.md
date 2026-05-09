@@ -2,6 +2,19 @@
 
 > AI-powered door-to-door storage with physical inventory orchestration, scoped to Singapore.
 
+## Features
+
+- **AI Vision Pipeline** — YOLOv8n live preview → YOLOv8m detection → DepthPro fp16 metric depth → SAM 2 Tiny segmentation (sequential GPU loading, peak ~2.1 GB VRAM)
+- **Voice Interface** — ElevenLabs STT/TTS with animated Nana Banana Pro mascot
+- **Smart Inventory** — Neo4j + Supabase dual-store with TrustCard owner ratings
+- **Booking & Payments** — Stripe Checkout with webhook confirmation emails (SMTP)
+- **Live Map** — Mapbox GL JS host browsing with Dijkstra shortest-path web worker
+- **Climate Alerts** — NEA real-time temperature API with in-app badge
+- **AI Chat** — OpenAI GPT-4o-mini + OpenRouter for conversational inventory help
+- **Mobile-ready** — ngrok tunnel for on-device camera access over HTTPS
+
+---
+
 ## Quick Start
 
 ### 1. Backend
@@ -47,6 +60,10 @@ Replace the generated placeholders with real **Nana Banana Pro** PNGs before dem
 | `NEO4J_URI` / `NEO4J_USER` / `NEO4J_PASSWORD` | Neo4j AuraDB |
 | `SUPABASE_URL` / `SUPABASE_KEY` | Supabase (fallback) |
 | `OPENAI_API_KEY` | GPT-4o-mini for chat |
+| `OPENROUTER_API_KEY` | OpenRouter (image generation / fallback models) |
+| `JWT_SECRET` | JWT signing secret |
+| `SMTP_HOST` / `SMTP_PORT` | SMTP server (default: smtp.gmail.com / 587) |
+| `SMTP_FROM_NAME` | Display name for outbound emails |
 
 ### Frontend (`frontend/.env.local`)
 
